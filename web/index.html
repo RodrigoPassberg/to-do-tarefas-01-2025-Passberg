@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Tarefas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+        }
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .navbar-nav {
+            margin-top: 10px;
+        }
+        .navbar-nav button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 5px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .navbar-nav button:hover {
+            background-color: #004494;
+        }
+        .navbar-nav button.active {
+            background-color: #004494;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group textarea,
+        .form-group select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group button {
+            background-color: #0056b3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .form-group button:hover {
+            background-color: #004494;
+        }
+        .message {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .kanban-column {
+            background-color: #f0f2f5;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 300px;
+        }
+        .kanban-column h3 {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+        }
+        .task-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .task-card p {
+            margin: 5px 0;
+        }
+        .task-card .priority {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .priority.alta {
+            background-color: #dc3545;
+        }
+        .priority.media {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .priority.baixa {
+            background-color: #28a745;
+        }
+        .task-card .actions button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        .task-card .actions button.delete {
+            background-color: #dc3545;
+        }
+        .task-card .actions button:hover {
+            opacity: 0.9;
+        }
+        .task-card select {
+            width: calc(100% - 10px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Gerenciamento de Tarefas</h1>
+        <nav class="navbar-nav">
+            <button id="btn-gerenciar-tarefas" class="active">Gerenciar Tarefas</button>
+            <button id="btn-cadastro-usuarios">Cadastro de Usuários</button>
+            <button id="btn-cadastro-tarefas">Cadastro de Tarefas</button>
+        </nav>
+    </div>
+
+    <div class="container">
+        <section id="gerenciar-tarefas" class="section active">
+            <h2>Tarefas</h2>
+            <div class="kanban-board">
+                <div class="kanban-column">
+                    <h3>A Fazer</h3>
+                    <div id="tasks-a-fazer"></div>
+                </div>
+                <div class="kanban-column">
+                    <h3>Fazendo</h3>
+                    <div id="tasks-fazendo"></div>
+                </div>
+                <div class="kanban-column">
+                    <h3>Pronto</h3>
+                    <div id="tasks-pronto"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cadastro-usuarios" class="section">
+            <h2>Cadastro de Usuários</h2>
+            <form id="form-cadastro-usuario">
+                <div class="form-group">
+                    <label for="nome-usuario">Nome:</label>
+                    <input type="text" id="nome-usuario" required>
+                </div>
+                <div class="form-group">
+                    <label for="email-usuario">Email:</label>
+                    <input type="email" id="email-usuario" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Cadastrar Usuário</button>
+                </div>
+                <div id="message-usuario" class="message"></div>
+            </form>
+        </section>
+
+        <section id="cadastro-tarefas" class="section">
+            <h2>Cadastro de Tarefas</h2>
+            <form id="form-cadastro-tarefa">
+                <div class="form-group">
+                    <label for="descricao-tarefa">Descrição:</label>
+                    <textarea id="descricao-tarefa" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="setor-tarefa">Setor:</label>
+                    <input type="text" id="setor-tarefa" required>
+                </div>
+                <div class="form-group">
+                    <label for="usuario-tarefa">Usuário:</label>
+                    <select id="usuario-tarefa" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="prioridade-tarefa">Prioridade:</label>
+                    <select id="prioridade-tarefa" required>
+                        <option value="">Selecione</option>
+                        <option value="baixa">Baixa</option>
+                        <option value="media">Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Cadastrar Tarefa</button>
+                </div>
+                <div id="message-tarefa" class="message"></div>
+            </form>
+        </section>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        document.getElementById('btn-gerenciar-tarefas').addEventListener('click', () => showSection('gerenciar-tarefas'));
+        document.getElementById('btn-cadastro-usuarios').addEventListener('click', () => showSection('cadastro-usuarios'));
+        document.getElementById('btn-cadastro-tarefas').addEventListener('click', () => showSection('cadastro-tarefas'));
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.navbar-nav button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            document.getElementById('btn-' + sectionId.replace(/-/g, '-')).classList.add('active');
+
+            if (sectionId === 'gerenciar-tarefas') {
+                fetchAndDisplayTasks();
+            } else if (sectionId === 'cadastro-tarefas') {
+                populateUsersDropdown();
+            }
+        }
+
+        document.getElementById('form-cadastro-usuario').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nome = document.getElementById('nome-usuario').value;
+            const email = document.getElementById('email-usuario').value;
+            const messageDiv = document.getElementById('message-usuario');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nome, email })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = 'Usuário cadastrado com sucesso!';
+                    document.getElementById('form-cadastro-usuario').reset();
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = data.error || 'Erro ao cadastrar usuário.';
+                }
+            } catch (error) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Erro de conexão com a API.';
+                console.error('Erro:', error);
+            }
+        });
+
+        async function populateUsersDropdown() {
+            const select = document.getElementById('usuario-tarefa');
+            select.innerHTML = '<option value="">Selecione</option>';
+            try {
+                const response = await fetch(`${API_BASE_URL}/usuarios`);
+                const users = await response.json();
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.nome;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+            }
+        }
+
+        document.getElementById('form-cadastro-tarefa').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const descricao_tarefa = document.getElementById('descricao-tarefa').value;
+            const nome_setor = document.getElementById('setor-tarefa').value;
+            const id_usuario = document.getElementById('usuario-tarefa').value;
+            const prioridade = document.getElementById('prioridade-tarefa').value;
+            const messageDiv = document.getElementById('message-tarefa');
+
+            console.log('Dados da tarefa:', {
+                descricao_tarefa,
+                nome_setor,
+                id_usuario,
+                prioridade
+            });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ descricao_tarefa, nome_setor, id_usuario: parseInt(id_usuario), prioridade, messageDiv })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = 'Tarefa cadastrada com sucesso!';
+                    document.getElementById('form-cadastro-tarefa').reset();
+                } else {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = data.error || 'Erro ao cadastrar tarefa.';
+                }
+            } catch (error) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Erro de conexão com a API.';
+                console.error('Erro:', error);
+            }
+        });
+
+        async function fetchAndDisplayTasks() {
+            const tasksAFAZER = document.getElementById('tasks-a-fazer');
+            const tasksFAZENDO = document.getElementById('tasks-fazendo');
+            const tasksPRONTO = document.getElementById('tasks-pronto');
+
+            tasksAFAZER.innerHTML = '';
+            tasksFAZENDO.innerHTML = '';
+            tasksPRONTO.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas`);
+                const tasks = await response.json();
+
+                tasks.forEach(task => {
+                    const taskCard = document.createElement('div');
+                    taskCard.className = 'task-card';
+                    taskCard.innerHTML = `
+                        <p><strong>Descrição:</strong> ${task.descricao_tarefa}</p>
+                        <p><strong>Setor:</strong> ${task.nome_setor}</p>
+                        <p><span class="priority ${task.prioridade}">Prioridade: ${task.prioridade}</span></p>
+                        <p><strong>Vinculado a:</strong> ${task.nome_usuario ? task.nome_usuario : 'N/A'}</p>
+                        <div class="actions">
+                            <button onclick="editTask(${task.id_tarefa})">Editar</button>
+                            <button class="delete" onclick="deleteTask(${task.id_tarefa})">Excluir</button>
+                            <select onchange="updateTaskStatus(${task.id_tarefa}, this.value)">
+                                <option value="a fazer" ${task.status === 'a fazer' ? 'selected' : ''}>A Fazer</option>
+                                <option value="fazendo" ${task.status === 'fazendo' ? 'selected' : ''}>Fazendo</option>
+                                <option value="pronto" ${task.status === 'pronto' ? 'selected' : ''}>Pronto</option>
+                            </select>
+                        </div>
+                    `;
+
+                    if (task.status === 'a fazer') {
+                        tasksAFAZER.appendChild(taskCard);
+                    } else if (task.status === 'fazendo') {
+                        tasksFAZENDO.appendChild(taskCard);
+                    } else if (task.status === 'pronto') {
+                        tasksPRONTO.appendChild(taskCard);
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar tarefas:', error);
+            }
+        }
+
+        async function updateTaskStatus(taskId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/tarefas/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                if (response.ok) {
+                    fetchAndDisplayTasks();
+                } else {
+                    console.error('Erro ao atualizar status da tarefa.');
+                }
+            } catch (error) {
+                console.error('Erro de conexão com a API ao atualizar status:', error);
+            }
+        }
+
+        async function editTask(taskId) {
+            alert('Funcionalidade de edição para a tarefa ' + taskId + ' será implementada.');
+        }
+
+        async function deleteTask(taskId) {
+            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/tarefas/${taskId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        fetchAndDisplayTasks();
+                    } else {
+                        console.error('Erro ao excluir tarefa.');
+                    }
+                } catch (error) {
+                    console.error('Erro de conexão com a API ao excluir tarefa:', error);
+                }
+            }
+        }
+
+        showSection('gerenciar-tarefas');
+    </script>
+</body>
+</html>
